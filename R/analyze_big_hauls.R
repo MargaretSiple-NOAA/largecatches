@@ -5,17 +5,13 @@ library(tidyverse)
 haul0 <- read.csv("data/racebase_haul.csv")
 catch0 <- read.csv("data/racebase_catch.csv")
 
-# cpue0 <- read.csv("data/gapproducts_cpue.csv")
-
 head(haul0)
 head(catch0)
 unique(catch0$REGION)
 
-# head(cpue0)
-
 hauls_catch <- haul0 |>
   right_join(catch0, by = c("CRUISEJOIN", "HAULJOIN", "REGION", "CRUISE", "VESSEL", "HAUL")) |>
-  group_by(HAULJOIN, REGION, VESSEL, CRUISE, HAUL, ABUNDANCE_HAUL, DURATION, PERFORMANCE, DISTANCE_FISHED) |>
+  group_by(HAULJOIN, REGION, VESSEL, CRUISE, HAUL, ABUNDANCE_HAUL, DURATION, PERFORMANCE, DISTANCE_FISHED, SUBSAMPLE) |>
   summarize(TOTAL_CATCH_KG = sum(WEIGHT, na.rm = TRUE)) |> # I think KG is the units of the CATCH table WEIGHT column.
   ungroup() |>
   filter(REGION %in% c("AI", "GOA"))
@@ -29,7 +25,7 @@ table(hauls_catch$REGION)
 bighauls <- hauls_catch |>
   filter(TOTAL_CATCH_KG > 5000) |>
   mutate(YEAR = as.numeric(stringr::str_extract(CRUISE, "^\\d{4}"))) |>
-  filter(YEAR > 1991) |>
+  filter(YEAR > 2010) |>
   mutate(APPROX_ONBOTTOMTIME = DISTANCE_FISHED / 0.0926) # in mins
 
 table(bighauls$REGION)
@@ -53,7 +49,7 @@ p1 <- bighauls |>
   scale_color_manual("Performance code", values = mycolors) +
   xlab("Approximate on-bottom time (mins)") +
   ylab("Total catch (mt)") +
-  labs(title = "Big (>5000 kg) hauls after 1991") +
+  labs(title = "Big (>5000 kg) hauls after 2010") +
   theme_light(base_size = 14)
 
 ggsave(filename = "output/onbottom_time_vs_total_catch.png", plot = p1, width = 8, height = 4, units = "in", dpi = "retina")
